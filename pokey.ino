@@ -13,7 +13,10 @@ const byte REGISTER_SND_04 = 7;
 const byte REGISTERS_SND[4] = { REGISTER_SND_01, REGISTER_SND_02, REGISTER_SND_03, REGISTER_SND_04 };
 
 // address of the AUDCTL register
-const byte REGISTER_AUDCTL = 8;
+const byte REGISTER_AUDCTL = 0x08;
+
+// address of the SKCTL register
+const byte REGISTER_SKCTL = 0x0F;
 
 const byte PORTB_MASK = B00011110;
 
@@ -21,7 +24,7 @@ const byte PORTB_MASK = B00011110;
 const byte CS_PIN = 13;
 
 // wait time between pulses
-const byte CS_WAIT_TIME = 1000;
+const byte CS_WAIT_TIME = 1;
 
 const byte SOUND_NOISE_01 = 0;
 const byte SOUND_NOISE_02 = 1;
@@ -29,6 +32,7 @@ const byte SOUND_NOISE_03 = 2;
 const byte SOUND_NOISE_04 = 4;
 const byte SOUND_NOISE_05 = 6;
 const byte SOUND_CLEAN = 5;
+const byte SOUNDS[6] = { SOUND_CLEAN, SOUND_NOISE_05, SOUND_NOISE_04, SOUND_NOISE_03, SOUND_NOISE_02, SOUND_NOISE_01 };
 
 
 void setup() {
@@ -57,19 +61,29 @@ void setup() {
   pinMode(CS_PIN, OUTPUT);
   digitalWrite(CS_PIN, HIGH);
 
+  // put POKEY in and out of reset state
+  writeDataToRegister(REGISTER_SKCTL, 0);
+  writeDataToRegister(REGISTER_SKCTL, 3);
+  
   // init AUDCTL
-  writeDataToRegister(REGISTER_AUDCTL, 1);
+  writeDataToRegister(REGISTER_AUDCTL, 0);
+  
+  muteAllChannels();
 }
 
 void loop() {
-//  playSound(1, 0x3C, SOUND_CLEAN, 10);
-  playSound(3, 0xFF, SOUND_CLEAN, 10);
-//  playSound(3, 79, SOUND_CLEAN, 10);
-  delay(500);
-//  playSound(2, B00011111, SOUND_NOISE_05, 5);
-//  playSound(3, B00001111, SOUND_NOISE_04, 5);
-//  playSound(4, B00000111, SOUND_NOISE_03, 5);
-
+  for (int s=0; s<6; s++) {
+    playSound(1, 0x1D, SOUNDS[S], 8);
+    delay(1000);
+    playSound(2, 0x2F, SOUNDS[S], 8);
+    delay(1000);
+    playSound(3, 0x51, SOUNDS[S], 8);
+    delay(1000);
+    playSound(4, 0x79, SOUNDS[S], 8);
+    delay(1000);
+    muteAllChannels();
+  }
+  
 }
 
 void writeDataToRegister(byte registerAddress, byte data) {
@@ -110,4 +124,14 @@ void playSound(byte channel, byte frequency, byte soundTimbre, byte soundVolume)
   delay(500);
   // than the rest (TTTxVVVV)
   writeDataToRegister(REGISTERS_SND[channel - 1], (soundTimbre << 5) | (B00001111 & soundVolume));
+}
+
+void mute_channel(byte channel) {
+  writeDataToRegister(REGISTERS_SND[channel - 1], 0);
+}  
+
+void muteAllChannels() {
+  for (int i=1; i<=4; i++) {
+    muteChannel(i);
+  }
 }
