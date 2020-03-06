@@ -120,8 +120,7 @@ void writeToPOKEY() {
 void playSound(byte channel, byte frequency, byte soundTimbre, byte soundVolume) {
   // first set frequency
   writeDataToRegister(REGISTERS_FREQ[channel - 1], frequency);
-
-  delay(500);
+  
   // than the rest (TTTxVVVV)
   writeDataToRegister(REGISTERS_SND[channel - 1], (soundTimbre << 5) | (B00001111 & soundVolume));
 }
