@@ -26,6 +26,9 @@ const byte CS_PIN = 13;
 // wait time between pulses
 const byte CS_WAIT_TIME = 1;
 
+const byte ADDRESS_PINS[4] = {9, 10, 11, 12};
+const byte DATA_PINS[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
+
 const byte SOUND_NOISE_01 = 0;
 const byte SOUND_NOISE_02 = 1;
 const byte SOUND_NOISE_03 = 2;
@@ -37,29 +40,9 @@ const byte SOUNDS[6] = { SOUND_CLEAN, SOUND_NOISE_05, SOUND_NOISE_04, SOUND_NOIS
 
 void setup() {
   // set pin directions
-  // POKEY D0-D7 (Arduino Nano PD0-PD7/D0-D7)
-//  DDRD = B11111111;
-  pinMode(A0, OUTPUT);
-  pinMode(A1, OUTPUT);
-  pinMode(A2, OUTPUT);
-  pinMode(A3, OUTPUT);
-  pinMode(A4, OUTPUT);
-  pinMode(A5, OUTPUT);
-  pinMode(A6, OUTPUT);
-  pinMode(A7, OUTPUT);
-
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT);
-
-  
-  // POKEY A0-A3 (Arduino Nano PB1-PB4/D9-D12)
-  //DDRB = DDRB | B00011110;
-
-  // set CS pin mode (inverted logic for this one)
-  pinMode(CS_PIN, OUTPUT);
-  digitalWrite(CS_PIN, HIGH);
+  initBoardPinsForPokeyAddress();
+  initBoardPinsForPokeyData();
+  initBoardPinCS();
 
   // put POKEY in and out of reset state
   writeDataToRegister(REGISTER_SKCTL, 0);
@@ -73,17 +56,39 @@ void setup() {
 
 void loop() {
   for (int s=0; s<6; s++) {
-    playSound(1, 0x1D, SOUNDS[S], 8);
+    playSound(1, 0x1D, SOUNDS[s], 8);
     delay(1000);
-    playSound(2, 0x2F, SOUNDS[S], 8);
+    playSound(2, 0x2F, SOUNDS[s], 8);
     delay(1000);
-    playSound(3, 0x51, SOUNDS[S], 8);
+    playSound(3, 0x51, SOUNDS[s], 8);
     delay(1000);
-    playSound(4, 0x79, SOUNDS[S], 8);
+    playSound(4, 0x79, SOUNDS[s], 8);
     delay(1000);
     muteAllChannels();
   }
   
+}
+
+void initBoardPinCS() {
+  // set CS pin mode (inverted logic for this one)
+  pinMode(CS_PIN, OUTPUT);
+  digitalWrite(CS_PIN, HIGH);
+}
+
+void initBoardPinsForPokeyData() {
+  // POKEY D0-D7 (Arduino Nano PD0-PD7/D0-D7)
+//  DDRD = B11111111;
+  for (int i = 0; i < sizeof(DATA_PINS); i++) {
+    pinMode(DATA_PINS[i], OUTPUT);
+  }
+}
+
+void initBoardPinsForPokeyAddress() {
+  // POKEY A0-A3 (Arduino Nano PB1-PB4/D9-D12)
+  //DDRB = DDRB | B00011110;
+  for (int i = 0; i < sizeof(ADDRESS_PINS); i++) {
+    pinMode(ADDRESS_PINS[i], OUTPUT);
+  }
 }
 
 void writeDataToRegister(byte registerAddress, byte data) {
@@ -93,8 +98,10 @@ void writeDataToRegister(byte registerAddress, byte data) {
 }
 
 void setPOKEYAddress(byte registerAddress) {
+  // easy way
   //PORTB = PORTB | (PORTB_MASK & (registerAddress << 1));
-  for (int i = 9, j = 0; i <= 12, j <=3; i++, j++) {
+  // or the hard way
+  for (int i = ADDRESS_PINS[0], j = 0; i <= ADDRESS_PINS[3], j <=3; i++, j++) {
     digitalWrite(i, pinOutputValue(j, registerAddress));
   }
   
