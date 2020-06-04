@@ -101,8 +101,8 @@ void setPOKEYAddress(byte registerAddress) {
   // easy way
   //PORTB = PORTB | (PORTB_MASK & (registerAddress << 1));
   // or the hard way
-  for (int i = ADDRESS_PINS[0], j = 0; i <= ADDRESS_PINS[3], j <=3; i++, j++) {
-    digitalWrite(i, pinOutputValue(j, registerAddress));
+  for (int i = 0; i <= 3; i++) {
+    digitalWrite(ADDRESS_PINS[i], pinOutputValue(i, registerAddress));
   }
   
 }
@@ -114,7 +114,7 @@ int pinOutputValue(byte pinNumber, byte data) {
 void setPOKEYData(byte data) {
 //  PORTD = data;
   for (int i = 0; i < 8; i++) {
-    digitalWrite(A0 | i, pinOutputValue(i, data));
+    digitalWrite(DATA_PINS[i], pinOutputValue(i, data));
   }
 }
 
